@@ -11,7 +11,7 @@
   :group 'netlogo-mode)
 
 (defvar netlogo-indent-increase-regexp
-  "\\\[\\|\\(^\\|\s\\)to\-report\\|\\(^\\|\s\\)to" 
+  "\\\[\\|\\(^\\|\s\\)to\-report\\|\\(^\\|\s\\)to"
   "regexp selecting elements that causes an increase in indentation")
 (defvar netlogo-indent-decrease-regexp "\\\]\\|\\(^\\|\s\\)end\\($\\|\s\\)"
   "regexp selecting elements that causes a decrease in indentation")
@@ -132,7 +132,7 @@
 
 (defun netlogo-is-builtin (keyword)
   (interactive)
-  (cond 
+  (cond
    ((netlogo-is-function? keyword) "function")
    ((netlogo-is-logic-keyword? keyword) "logic keyword")
    ((netlogo-is-type? keyword) "type")
@@ -170,7 +170,7 @@
     ;; if line has comment, don't
     ;; do anything beyond it
     (setq netlogo-search-end-position
-          (if (search-forward ";" (line-end-position) t)  
+          (if (search-forward ";" (line-end-position) t)
               (point)
             (line-end-position)))
     ;; calculate net change for the line
@@ -197,7 +197,7 @@
           (current-indentation)))
     0))
 
-                                        
+
 (defun line-has-string (arg)
   (save-excursion
     (beginning-of-line)
@@ -216,7 +216,7 @@
         (setq netlogo-indent-here comment-column
               netlogo-indent-change 0)))
 
-  (save-excursion ; remove 
+  (save-excursion ; remove
     (back-to-indentation)
     (fixup-whitespace))
   (save-excursion
@@ -231,27 +231,30 @@
 (defun netlogo-indent-region (start end)
   "indents current code as netlogo"
   (interactive (region-beginning) (region-end))
-  (save-excursion 
-    (goto-char start)
-    (setq netlogo-indent-here (netlogo-indent-previous-indent))
-    (while (< (point) end)
-      (if (line-has-string "^[\s-]+;;;")
-          (progn (beginning-of-line) (fixup-whitespace))
-        (if (line-has-string "^[\s-]+;\\([^;]\\|$\\)")
-            (progn(beginning-of-line) (fixup-whitespace) (indent-to comment-column))
-          (progn  
-            (setq netlogo-indent-change (netlogo-indent-change-for-line))
-            (beginning-of-line)
-            (fixup-whitespace)
-            (if (>= netlogo-indent-change 0)
-                (progn ; positive change - applies to next line
-                  (indent-to-column netlogo-indent-here)
-                  (setq netlogo-indent-here (+ netlogo-indent-here netlogo-indent-change)))
-              (progn ; negative change - applied instantly
-                (setq netlogo-indent-here (+ netlogo-indent-here netlogo-indent-change))
-                (indent-to-column netlogo-indent-here))))))
-      (next-line))))
-                      
+  (save-excursion
+    (let ((end-line (line-number-at-pos end)))
+      (goto-char start)
+      (setq netlogo-indent-here (netlogo-indent-previous-indent))
+
+      (while (< (line-number-at-pos) end-line)
+        (if (line-has-string "^[\s-]+;;;")
+            (progn (beginning-of-line) (fixup-whitespace))
+          (if (line-has-string "^[\s-]+;\\([^;]\\|$\\)")
+              (progn(beginning-of-line) (fixup-whitespace) (indent-to comment-column))
+            (progn
+              (setq netlogo-indent-change (netlogo-indent-change-for-line))
+              (beginning-of-line)
+              (fixup-whitespace)
+              (if (>= netlogo-indent-change 0)
+                  (progn ; positive change - applies to next line
+                    (indent-to-column netlogo-indent-here)
+                    (setq netlogo-indent-here (+ netlogo-indent-here netlogo-indent-change)))
+                (progn ; negative change - applied instantly
+                  (setq netlogo-indent-here (+ netlogo-indent-here netlogo-indent-change))
+                  (indent-to-column netlogo-indent-here))))))
+        (end-of-line)
+        (forward-line)))))
+
 
 (define-derived-mode netlogo-mode prog-mode "NetLogo"
               "Major mode for editing NetLogo files"
